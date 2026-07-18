@@ -1,0 +1,9 @@
+# Versions intentionally left unpinned — I haven't checked PyPI for current
+# release numbers, and guessing a specific patch version would be exactly
+# the kind of unverified claim to avoid. Install fresh, then run
+# `pip freeze > requirements.lock.txt` and commit that instead.
+
+fastapi
+uvicorn[standard]
+pycryptodome
+pydantic

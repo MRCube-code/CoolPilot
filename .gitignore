@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Backend runtime data — regenerated locally, not part of the source
+backend/data/
+backend/logs/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Frontend has its own .gitignore (node_modules, .next, out, android, .env.local)

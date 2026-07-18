@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android has blocked plaintext (non-HTTPS) network traffic by default
+  since API 28 (targetSdk). Our backend runs on plain HTTP — adding real
+  TLS to a loopback/LAN-only FastAPI server is disproportionate for what
+  it's protecting — so the app needs an explicit exception for exactly
+  the hosts it's allowed to talk to in cleartext. This does NOT weaken
+  anything else: any other traffic (ads, trackers, whatever) is still
+  blocked from using cleartext; only these two hosts are exempted.
+
+  127.0.0.1 - the backend running in Termux on the same phone.
+  Add your LAN IP (e.g. 192.168.1.x) too if the backend runs on a
+  separate machine on your home network instead of on-phone.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

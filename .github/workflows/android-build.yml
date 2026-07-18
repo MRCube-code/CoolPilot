@@ -1,0 +1,94 @@
+name: Build Android APK
+
+# Builds a debug APK you can sideload directly — no Android Studio, no
+# local Android SDK setup. Trigger it manually from the Actions tab (works
+# fine from GitHub's mobile site/app, not just a desktop), or it runs
+# automatically on pushes to main that touch the frontend.
+#
+# What this does NOT do: sign a release build for the Play Store, or run
+# your backend anywhere. This only packages the frontend as an installable
+# APK that still needs a reachable CoolPilot backend — see the root
+# README's "Full Android app" section for running the backend in Termux
+# on the same phone.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/android-build.yml"
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    # Baked into the JS bundle at build time — a static export has no
+    # server to read env vars from at runtime, so this has to be right
+    # here, not in a .env file the phone reads later. 127.0.0.1 assumes
+    # the backend runs in Termux on the SAME phone as this app (see root
+    # README). If your backend runs on a separate machine on your LAN,
+    # change this to that machine's LAN IP and re-run this workflow.
+    env:
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Explicit SDK setup rather than relying on whatever happens to be
+      # pre-installed on the runner image — GitHub has trimmed older SDK/
+      # build-tools versions from these images before (Jan 2026) to save
+      # space, so pinning this ourselves is more robust than assuming.
+      - uses: android-actions/setup-android@v3
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build static export
+        run: npm run build:capacitor
+
+      - name: Add Android platform (always fresh — see .gitignore)
+        run: |
+          rm -rf android
+          npx cap add android
+
+      - name: Apply local-backend network security patch
+        run: bash android-patches/apply.sh
+
+      - name: Sync web assets into the Android project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: coolpilot-debug-apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+    # If this fails on ./gradlew assembleDebug with an SDK/build-tools
+    # version mismatch: that's Capacitor 8's generated build.gradle asking
+    # for a specific compileSdk/build-tools version I couldn't verify
+    # without actually running `cap add android` myself (no Android
+    # tooling in the sandbox this was built in). Read the actual error —
+    # it names the missing version — and either add it as an explicit
+    # `packages:` input to the setup-android step, or let Gradle
+    # auto-accept licenses and download it (usually automatic once
+    # cmdline-tools are present, which setup-android provides).
