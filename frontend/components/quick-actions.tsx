@@ -212,7 +212,13 @@ function CustomModeDialog({
               <Label>Target temperature</Label>
               <span className="tabular-nums text-sm font-medium">{temp}°C</span>
             </div>
-            <Slider min={16} max={30} step={1} value={[temp]} onValueChange={([v]) => setTemp(v)} />
+            <Slider
+  min={16}
+  max={30}
+  step={1}
+  value={[temp]}
+  onValueChange={([v]) => setTemp(v ?? temp)}
+/>
           </div>
         </div>
 
