@@ -20,7 +20,8 @@ export default function DashboardPage() {
   const [selectedMac, setSelectedMac] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selectedMac && devices.length > 0) setSelectedMac(devices[0].mac);
+  const first = devices[0];
+  if (!selectedMac && first) setSelectedMac(first.mac);
   }, [devices, selectedMac]);
 
   const { status, polledAt, loading, error, sending, sendCommand, refresh } =
