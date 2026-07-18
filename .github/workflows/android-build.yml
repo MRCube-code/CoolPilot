@@ -54,7 +54,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build static export
         run: npm run build:capacitor
